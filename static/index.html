@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ollama GUI</title>
+</head>
+<body>
+  <textarea id="prompt"></textarea>
+  <button onclick="send()">Send</button>
+
+  <pre id="output"></pre>
+
+<script>
+async function send() {
+  const prompt = document.getElementById("prompt").value
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      model: "qwen2.5-coder:latest",
+      prompt,
+      stream: true
+    })
+  })
+
+  const data = await res.json()
+  document.getElementById("output").textContent = data.response
+}
+</script>
+</body>
+</html>
