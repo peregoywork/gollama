@@ -2,29 +2,39 @@
 <html>
 <head>
   <title>Ollama GUI</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <textarea id="prompt"></textarea>
+  <h1>Ollama GUI</h1>
+  <textarea id="prompt" placeholder="Type your prompt here..."></textarea>
   <button onclick="send()">Send</button>
 
   <pre id="output"></pre>
 
 <script>
 async function send() {
-  const prompt = document.getElementById("prompt").value
+    const prompt = document.getElementById("prompt").value
+    const output = document.getElementById("output")
+    output.textContent = "Generating..."
 
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      model: "qwen2.5-coder:latest",
-      prompt,
-      stream: true
-    })
-  })
+    try {
+        const res = await fetch("http://localhost:11434/api/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                model: "qwen2.5-coder:latest",
+                messages: [
+                    { role: "user", content: prompt }
+                ],
+                stream: false // Note: set to false if your Go backend returns a single JSON object
+            })
+        })
 
-  const data = await res.json()
-  document.getElementById("output").textContent = data.response
+        const data = await res.json()
+        output.textContent = data.message.content
+    } catch (err) {
+        output.textContent = "Error: " + err.message
+    }
 }
 </script>
 </body>
