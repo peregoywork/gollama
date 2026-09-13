@@ -25,6 +25,23 @@ h1 {
     margin: 0 0 8px 0;
 }
 
+button {
+    align-self: flex-end;
+    padding: 10px 24px;
+    background-color: var(--bg-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: var(--accent-hover);
+}
+
 textarea {
     width: 100%;
     height: 120px;
@@ -44,23 +61,6 @@ textarea:focus {
     border-color: var(--accent-color);
 }
 
-button {
-    align-self: flex-end;
-    padding: 10px 24px;
-    background-color: var(--bg-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: var(--accent-hover);
-}
-
 pre {
     background-color: var(--card-bg);
     color: var(--text-color);
@@ -76,3 +76,13 @@ pre {
     overflow-y: auto;
     box-sizing: border-box;
 }
+
+user-input {
+    background-color: var(--card-bg);
+}
+
+prior-chat {
+    background-color: var(--card-bg);
+}
+
+

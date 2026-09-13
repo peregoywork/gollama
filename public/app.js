@@ -1,30 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Ollama GUI</title>
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-  <h1>Ollama GUI</h1>
-  <textarea id="prompt" placeholder="Type your prompt here..."></textarea>
-  <button onclick="send()">Send</button>
+const ollamaURL = "http://localhost:11434/api/chat"
 
-  <pre id="output"></pre>
+const messages = document.getElementById("chat-log")
+const prompt = document.getElementById("prompt")
+const output = document.getElementById("output")
 
-<script>
+
 async function send() {
-    const prompt = document.getElementById("prompt").value
-    const output = document.getElementById("output")
     output.textContent = "Generating..."
 
     try {
-        const res = await fetch("http://localhost:11434/api/chat", {
+        const res = await fetch(ollamaURL, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 model: "qwen2.5-coder:latest",
                 messages: [
-                    { role: "user", content: prompt }
+                    { role: "user", content: prompt.text }
                 ],
                 stream: false // Note: set to false if your Go backend returns a single JSON object
             })
@@ -36,6 +27,8 @@ async function send() {
         output.textContent = "Error: " + err.message
     }
 }
-</script>
-</body>
-</html>
+
+function appendMessage(message) {
+    // is message ai or user
+    // use "pre" for both
+}

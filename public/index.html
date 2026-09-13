@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ollama GUI</title>
+        <link rel="stylesheet" href="./style.css" />
+        <script src="./app.js"></script>
+    </head>
+    <body>
+        <h1>Ollama GUI</h1>
+
+        <prior-chat id="chat-log">
+            show all prior messages, differing between user and bot 
+        </prior-chat>
+
+        <pre id="output"></pre>
+
+        <user-input>
+            <textarea id="prompt" placeholder="Type your prompt here..."></textarea>
+            <button onclick="send()">Send</button>
+        </user-input>
+
+    </body>
+</html>
