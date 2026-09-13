@@ -1,29 +1,33 @@
 package main
 
 import (
-  "fmt"
-  // "time"
-  "net/http"
-  // "ollama-gui/internal/api"
+	"fmt"
+	// "time"
+	"net/http"
+
+	// "ollama-gui/internal/api"
+)
+
+const (
+	staticDir = "./public"
 )
 
 func main() {
 	fmt.Println("Server Startup")
-
-    // rawURL := "http://localhost:11434"
     // rawToken := "secret-token"
 
-    // client, err := api.NewClient(&rawURL, &rawToken, 5 * time.Second)
-    // if err != nil {
-    //     fmt.Println("error starting ollama client", err)
-    // }
-    
-    fileServer := http.FileServer(http.Dir("./static"))
-    http.Handle("/", fileServer)
+	http.HandleFunc("/", handleStaticFiles)
+
     err := http.ListenAndServe(":8080", nil)
     if err != nil {
         fmt.Println("error starting server", err)
     }
 
     fmt.Println("Server Exit")
+}
+
+
+func handleStaticFiles(w http.ResponseWriter, r *http.Request) {
+	fs := http.FileServer(http.Dir(staticDir))
+	fs.ServeHTTP(w, r)
 }
