@@ -18,13 +18,8 @@ const output = document.getElementById("output")
 
 
 async function send() {
-
-    console.log(prompt)
-
     const userMsg = prompt.value
     if (!userMsg) return;
-
-    console.log("submitting prompt")
 
     appendMessage("user", userMsg)
     prompt.text = ""
@@ -34,7 +29,7 @@ async function send() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             model: modelName,
-            messages: messages.map(m => ({ role: m.messageType, content: m.content })),
+            messages: messages.map(m => ({ role: m.role, content: m.content })),
             stream: false // Note: set to false if your Go backend returns a single JSON object
         })
     })
