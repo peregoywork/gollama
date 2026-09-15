@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	// "time"
+	"time"
+	"log"
 	"net/http"
 
 	// "ollama-gui/internal/api"
@@ -10,6 +11,8 @@ import (
 
 const (
 	staticDir = "./public"
+	host = "0.0.0.0"
+	port = "8080"
 )
 
 func main() {
