@@ -22,7 +22,7 @@ async function send() {
     if (!userMsg) return;
 
     appendMessage("user", userMsg)
-    prompt.text = ""
+    prompt.value = ""
 
     fetch(ollamaURL, {
         method: "POST",
@@ -52,8 +52,19 @@ async function send() {
 
 function appendMessage(role, content) {
     const msg = new ChatMessage(role, content);
+    let tag = "";
     messages.push(msg);
 
-    const html = `<div class="message ${role}">${content}</div>`;
+    switch (msg.role) {
+        case "user":
+            tag = 'div';
+            break;
+        case "assistant":
+            tag = 'pre';
+            break;
+        default:
+            return;
+    }
+    const html = `<${tag} class="message ${role}">${content}</${tag}>`;
     chatLog.insertAdjacentHTML('beforeend', html);
 }
