@@ -77,28 +77,25 @@ pre {
     word-wrap: break-word;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.9rem;
-    min-height: 150px;
-    max-height: 500px;
-    overflow-y: auto;
     box-sizing: border-box;
 }
 
-chat-log {
+#chat-log {
     background-color: var(--card-bg);
+    border-radius: 16px;
 
     .message {
+        display: flex;
+
         padding: 8px;
         margin-bottom: 8px;
-        border-radius: 4px;
 
-        &.user { 
-            background-color: #e3f2fd;
+        &.user {
+            justify-content: flex-end;
         }
 
-        &.ai {
-            background-color: #f5f5f5;
+        &.assistant {
+            justify-content: flex-start;
         }
     }
 }
-
-
