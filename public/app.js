@@ -1,34 +1,64 @@
 const ollamaURL = "http://localhost:11434/api/chat"
+const modelName = "qwen2.5-coder:latest"
 
-const messages = document.getElementById("chat-log")
+class ChatMessage {
+    static VALID_ROLES = Object.freeze(["user", "assistant"])
+
+    constructor(role, content) {
+        this.role = role 
+        this.content = content
+    }
+}
+
+const messages = [];
+
+const chatLog = document.getElementById("chat-log")
 const prompt = document.getElementById("prompt")
 const output = document.getElementById("output")
 
 
 async function send() {
-    output.textContent = "Generating..."
 
-    try {
-        const res = await fetch(ollamaURL, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                model: "qwen2.5-coder:latest",
-                messages: [
-                    { role: "user", content: prompt.text }
-                ],
-                stream: false // Note: set to false if your Go backend returns a single JSON object
-            })
+    console.log(prompt)
+
+    const userMsg = prompt.value
+    if (!userMsg) return;
+
+    console.log("submitting prompt")
+
+    appendMessage("user", userMsg)
+    prompt.text = ""
+
+    fetch(ollamaURL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            model: modelName,
+            messages: messages.map(m => ({ role: m.messageType, content: m.content })),
+            stream: false // Note: set to false if your Go backend returns a single JSON object
         })
-
-        const data = await res.json()
-        output.textContent = data.message.content
-    } catch (err) {
-        output.textContent = "Error: " + err.message
-    }
+    })
+    .then(res => {
+        if (!res.ok) { 
+            throw new Error("Server error: ${response.status}");
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log(data.message)
+        appendMessage(data.message.role, data.message.content);
+    })
+    .catch(error => {
+        console.error("Fetch error:", error);
+        appendMessage("assistant", "error generating response")
+    })
 }
 
-function appendMessage(message) {
-    // is message ai or user
-    // use "pre" for both
+
+function appendMessage(role, content) {
+    const msg = new ChatMessage(role, content);
+    messages.push(msg);
+
+    const html = `<div class="message ${role}">${content}</div>`;
+    chatLog.insertAdjacentHTML('beforeend', html);
 }
