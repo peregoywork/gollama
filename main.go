@@ -16,19 +16,36 @@ const (
 )
 
 func main() {
-	fmt.Println("Server Startup")
-    // rawToken := "secret-token"
+	url := fmt.Sprintf("%s:%s", host, port)
+	pacificLoc, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		log.Fatalf("Critical: failed to load timezone: %w", err)
+	}
 
-	http.HandleFunc("/", handleStaticFiles)
+	http.HandleFunc("/", middlewareLogging(pacificLoc, handleStaticFiles))
 
-    err := http.ListenAndServe(":8080", nil)
+	log.Printf("Server starting: http://%s", url)
+	err = http.ListenAndServe(url, nil)
     if err != nil {
-        fmt.Println("error starting server", err)
+		log.Fatalf("Critical: error starting server: %w", err)
     }
 
     fmt.Println("Server Exit")
 }
 
+
+func middlewareLogging(loc *time.Location, next http.HandlerFunc) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		start := time.Now().In(loc)
+		next(w, r)
+		log.Printf(
+			"%s %s | %v",
+			r.Method,
+			r.URL.Path,
+			time.Since(start),
+		)
+	}
+}
 
 func handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 	fs := http.FileServer(http.Dir(staticDir))
