@@ -1,4 +1,4 @@
-const modelName = "deepseek-r1:8b" // "qwen2.5-coder:latest"
+const modelName = "qwen2.5-coder:7b"
 
 class ChatMessage {
     static VALID_ROLES = Object.freeze(["user", "assistant"])
