@@ -16,11 +16,11 @@ const (
 	staticDir = "./public"
 	promptsDir = "./prompts"
 	host = "0.0.0.0"
-	port = "8080"
-	ollamaURL = "http://localhost:11434" // "http://arcadia.home.arpa:11434"
+	port = "8081"
+	ollamaURL = "http://arcadia.home.arpa:11434" // "http://localhost:11434" 
 )
 
-func main() { url := fmt.Sprintf("%s:%s", host, port)
+func main() { 
 	pacificLoc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		log.Fatalf("Critical: failed to load timezone: %w", err)
@@ -36,8 +36,9 @@ func main() { url := fmt.Sprintf("%s:%s", host, port)
 	http.HandleFunc("/", middlewareLogging(pacificLoc, handleStaticFiles))
 	http.HandleFunc("/chat", middlewareLogging(pacificLoc, server.handleOllamaChat))
 
-	log.Printf("Server starting: http://%s", url)
-	err = http.ListenAndServe(url, nil)
+	srvAddr := fmt.Sprintf("%s:%s", host, port)
+	log.Printf("Server starting: %s", srvAddr)
+	err = http.ListenAndServe(srvAddr, nil)
     if err != nil {
 		log.Fatalf("Critical: error starting server: %w", err)
     }

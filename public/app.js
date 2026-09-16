@@ -1,4 +1,4 @@
-const modelName = "qwen2.5-coder:latest"
+const modelName = "deepseek-r1:8b" // "qwen2.5-coder:latest"
 
 class ChatMessage {
     static VALID_ROLES = Object.freeze(["user", "assistant"])
@@ -19,7 +19,7 @@ const output = document.getElementById("output")
 async function send() {
     processUserPrompt()
 
-    fetch("http://localhost:8080/chat", {
+    fetch("/chat", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
