@@ -1,4 +1,3 @@
-const ollamaURL = "http://localhost:11434/api/chat"
 const modelName = "qwen2.5-coder:latest"
 
 class ChatMessage {
@@ -18,13 +17,9 @@ const output = document.getElementById("output")
 
 
 async function send() {
-    const userMsg = prompt.value
-    if (!userMsg) return;
+    processUserPrompt()
 
-    appendMessage("user", userMsg)
-    prompt.value = ""
-
-    fetch(ollamaURL, {
+    fetch("http://localhost:8080/chat", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -49,22 +44,29 @@ async function send() {
     })
 }
 
+function processUserPrompt() {
+    const userMsg = prompt.value
+    if (!userMsg) return;
+
+    prompt.value = ""
+    appendMessage("user", userMsg)
+}
 
 function appendMessage(role, content) {
     const msg = new ChatMessage(role, content);
-    let tag = "";
+    let tag = "pre";
     messages.push(msg);
 
-    switch (msg.role) {
-        case "user":
-            tag = 'div';
-            break;
-        case "assistant":
-            tag = 'pre';
-            break;
-        default:
-            return;
-    }
+    // switch (msg.role) {
+    //     case "user":
+    //         tag = 'pre';
+    //         break;
+    //     case "assistant":
+    //         tag = 'pre';
+    //         break;
+    //     default:
+    //         return;
+    // }
     const html = `<${tag} class="message ${role}">${content}</${tag}>`;
     chatLog.insertAdjacentHTML('beforeend', html);
 }

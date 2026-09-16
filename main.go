@@ -4,33 +4,34 @@ import (
 	"fmt"
 	"time"
 	"log"
+	"bytes"
+	"context"
 	"net/http"
 	"encoding/json"
-
-	"ollama-gui/internal/api"
 )
 
 const (
 	staticDir = "./public"
 	host = "0.0.0.0"
 	port = "8080"
-	ollamaURL = "localhost:11434"
+	ollamaURL = "http://localhost:11434" // "http://arcadia.home.arpa:11434"
 )
 
-func main() {
-	url := fmt.Sprintf("%s:%s", host, port)
+func main() { url := fmt.Sprintf("%s:%s", host, port)
 	pacificLoc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		log.Fatalf("Critical: failed to load timezone: %w", err)
 	}
 
-	ollamaClient, err := api.NewClient(&url, nil)
-	if err != nil {
-		log.Fatalf("Critical: failed to create api client: %w", err)
+	ollamaClient := OllamaClient{
+		http: &http.Client{ Timeout: time.Second * 120, },
+		baseURL: ollamaURL,
 	}
 
+	server := Server{ ollama: &ollamaClient, }
+
 	http.HandleFunc("/", middlewareLogging(pacificLoc, handleStaticFiles))
-	http.HandleFunc("/chat", middlewareLogging(pacificLoc, handleOllamaChat))
+	http.HandleFunc("/chat", middlewareLogging(pacificLoc, server.handleOllamaChat))
 
 	log.Printf("Server starting: http://%s", url)
 	err = http.ListenAndServe(url, nil)
@@ -41,7 +42,14 @@ func main() {
     fmt.Println("Server Exit")
 }
 
+type Server struct {
+	ollama *OllamaClient
+}
 
+type OllamaClient struct {
+	http 		*http.Client
+	baseURL 	string
+}
 
 // ChatRequest represents the payload for /api/chat
 type ChatRequest struct {
@@ -66,22 +74,41 @@ type ChatResponse struct {
 	TotalDuration int64    `json:"total_duration"`
 }
 
-// GenerateRequest represents the payload for text completion (/api/generate)
-type GenerateRequest struct {
-	Model   string         `json:"model"`
-	Prompt  string         `json:"prompt"`
-	Stream  *bool          `json:"stream,omitempty"`
-	Options map[string]any `json:"options,omitempty"`
+
+func (c *OllamaClient) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error: %w", err)
+	}
+	
+	fullURL := c.baseURL + "/api/chat"
+	reader := bytes.NewReader(data)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, fullURL, reader)
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("sent request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("ollama returned status: %d", resp.StatusCode)
+	}
+
+	var outResp ChatResponse
+	if err = json.NewDecoder(resp.Body).Decode(&outResp); err != nil {
+		return nil, fmt.Errorf("decoding error: %w", err)
+	}
+
+	return &outResp, nil
 }
 
-// GenerateResponse represents the server's JSON response for /api/generate
-type GenerateResponse struct {
-	Model     string    `json:"model"`
-	CreatedAt time.Time `json:"created_at"`
-	Response  string    `json:"response"`
-	Done      bool      `json:"done"`
-}
 
+// Handlers
 
 func middlewareLogging(loc *time.Location, next http.HandlerFunc) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
@@ -103,7 +130,24 @@ func handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 
 // Server method: Handles user HTTP traffic
 func (s *Server) handleOllamaChat(w http.ResponseWriter, r *http.Request) {
-    // 1. Read user JSON from r.Body
-    // 2. Call Ollama via s.ollama.Chat(r.Context(), userReq)
-    // 3. Write response to w
+	if r.Method != http.MethodPost {
+		http.Error(w, "", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req ChatRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
+		return
+	}
+
+	resp, err := s.ollama.Chat(context.Background(), req)
+	if err != nil {
+		log.Printf("ollama error: %w", err)
+		http.Error(w, "Failed to communicate with ollama server", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
