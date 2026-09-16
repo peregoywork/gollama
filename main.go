@@ -5,13 +5,16 @@ import (
 	"time"
 	"log"
 	"bytes"
+	"os"
 	"context"
 	"net/http"
 	"encoding/json"
+	"path/filepath"
 )
 
 const (
 	staticDir = "./public"
+	promptsDir = "./prompts"
 	host = "0.0.0.0"
 	port = "8080"
 	ollamaURL = "http://localhost:11434" // "http://arcadia.home.arpa:11434"
@@ -74,6 +77,28 @@ type ChatResponse struct {
 	TotalDuration int64    `json:"total_duration"`
 }
 
+
+func getSystemPromptMessage() (ChatMessage, error) {
+	filepath := filepath.Join(promptsDir, "system.md")
+	sysPrompt, err := os.ReadFile(filepath)
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("failed to ready system prompt: %w", err)
+	}
+
+	msg := ChatMessage{
+		Role: "system",
+		Content: string(sysPrompt),
+	}
+
+	return msg, nil
+}
+
+func ensureSystemPrompt(messages []ChatMessage, sysMsg ChatMessage) []ChatMessage {
+	if len(messages) == 0 || messages[0].Role != "system" {
+		return append([]ChatMessage{sysMsg}, messages...)
+	}
+	return messages
+}
 
 func (c *OllamaClient) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
 	data, err := json.Marshal(req)
@@ -140,6 +165,14 @@ func (s *Server) handleOllamaChat(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
 		return
 	}
+
+	sysMsg, err := getSystemPromptMessage()
+	if err != nil {
+		http.Error(w, "Internal Error", http.StatusInternalServerError)
+		return 
+	}
+
+	req.Messages = ensureSystemPrompt(req.Messages, sysMsg)
 
 	resp, err := s.ollama.Chat(context.Background(), req)
 	if err != nil {
