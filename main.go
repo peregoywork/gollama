@@ -6,6 +6,7 @@ import (
 	"log"
 	"bytes"
 	"os"
+	"io"
 	"context"
 	"net/http"
 	"encoding/json"
@@ -122,7 +123,11 @@ func (c *OllamaClient) Chat(ctx context.Context, req ChatRequest) (*ChatResponse
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("ollama returned status: %d", resp.StatusCode)
+        bodyBytes, err := io.ReadAll(resp.Body)
+        if err != nil {
+                return nil, fmt.Errorf("status %d (failed to read body)", resp.StatusCode)
+        }
+        return nil, fmt.Errorf("status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var outResp ChatResponse
