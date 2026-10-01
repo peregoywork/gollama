@@ -18,10 +18,10 @@ const (
 	promptsDir = "./prompts"
 	host = "0.0.0.0"
 	port = "8081"
-	ollamaURL = "http://arcadia.home.arpa:11434" // "http://localhost:11434" 
+	ollamaURL = "http://arcadia.home.arpa:11434" // "http://localhost:11434"
 )
 
-func main() { 
+func main() {
 	pacificLoc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		log.Fatalf("Critical: failed to load timezone: %w", err)
@@ -107,7 +107,7 @@ func (c *OllamaClient) Chat(ctx context.Context, req ChatRequest) (*ChatResponse
 	if err != nil {
 		return nil, fmt.Errorf("marshal error: %w", err)
 	}
-	
+
 	fullURL := c.baseURL + "/api/chat"
 	reader := bytes.NewReader(data)
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, fullURL, reader)
@@ -175,7 +175,7 @@ func (s *Server) handleOllamaChat(w http.ResponseWriter, r *http.Request) {
 	sysMsg, err := getSystemPromptMessage()
 	if err != nil {
 		http.Error(w, "Internal Error", http.StatusInternalServerError)
-		return 
+		return
 	}
 
 	req.Messages = ensureSystemPrompt(req.Messages, sysMsg)
